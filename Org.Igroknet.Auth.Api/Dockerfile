@@ -5,7 +5,7 @@ EXPOSE 44372
 
 FROM microsoft/dotnet:2.1-sdk AS build
 WORKDIR /src
-COPY ["Org.Igroknet.Auth.Api/Org.Igroknet.Auth.Api.csproj", "Org.Igroknet.Auth.Api/"]
+COPY ["../Org.Igroknet.Auth.Api/Org.Igroknet.Auth.Api.csproj", "Org.Igroknet.Auth.Api/"]
 RUN dotnet restore "Org.Igroknet.Auth.Api/Org.Igroknet.Auth.Api.csproj"
 COPY . .
 WORKDIR "/src/Org.Igroknet.Auth.Api"
