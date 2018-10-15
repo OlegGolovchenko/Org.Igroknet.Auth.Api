@@ -1,18 +1,25 @@
-﻿using Org.Igroknet.Auth.Domain;
+﻿using org.igrok.validator;
+using Org.Igroknet.Auth.Domain;
 using Org.Igroknet.Auth.Exceptions;
 using SQLite;
 using System;
 using System.Linq;
+using System.Net.Mail;
 
 namespace Org.Igroknet.Auth.Data
 {
     public class UserService : IUserService
     {
         private SQLiteConnection _connection;
+        private SmtpClient _mailer;
+        private string _from;
 
-        public UserService(SQLiteConnection connection)
+        public UserService(SQLiteConnection connection, SmtpClient mailer, string from)
         {
             _connection = connection;
+            _mailer = mailer;
+            EmailValidator.ValidateEmail(from);
+            _from = from;
             InitTable();
         }
 
@@ -79,7 +86,7 @@ namespace Org.Igroknet.Auth.Data
 
                 var user = _connection.Table<User>().SingleOrDefault(usr => usr.UserId == userId);
 
-                if(user == null)
+                if (user == null)
                 {
                     throw new DomainObjectMissingException(nameof(user));
                 }
@@ -87,7 +94,8 @@ namespace Org.Igroknet.Auth.Data
                 user.SetName(firstName, lastName);
 
                 _connection.Commit();
-            }catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 _connection.Rollback();
@@ -143,7 +151,7 @@ namespace Org.Igroknet.Auth.Data
 
                 var role = _connection.Table<Role>().SingleOrDefault(rl => rl.RoleId == roleId);
 
-                if(role == null)
+                if (role == null)
                 {
                     throw new DomainObjectMissingException(nameof(role));
                 }
@@ -181,7 +189,7 @@ namespace Org.Igroknet.Auth.Data
                 {
                     user.ConfirmAccount();
                     var confirmation = _connection.Table<ConfirmedUser>().SingleOrDefault(cu => cu.UserId == userId && cu.ConfirmationCode == confirmationCode);
-                    if(confirmation != null)
+                    if (confirmation != null)
                     {
                         _connection.Delete(confirmation);
                     }
@@ -217,6 +225,42 @@ namespace Org.Igroknet.Auth.Data
                 if (_connection.Table<ConfirmedUser>().Any(cu => cu.UserId == userId))
                 {
                     user.SwitchActiveStatus();
+                }
+
+                _connection.Commit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                _connection.Rollback();
+                throw;
+            }
+        }
+
+        public void SendConfirmationCode(Guid userId)
+        {
+            if(userId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+            try
+            {
+                _connection.BeginTransaction();
+                var user = _connection.Table<User>().SingleOrDefault(usr => usr.UserId == userId);
+
+                if (user == null)
+                {
+                    throw new DomainObjectMissingException(nameof(user));
+                }
+
+                if (!_connection.Table<ConfirmedUser>().Any(cu => cu.UserId == userId))
+                {
+                    var random = new Random();
+                    var confCode = random.Next();
+                    var ConfirmedUser = new ConfirmedUser(userId, confCode);
+                    var message = new MailMessage(_from, user.Email, "Please confirm your account.", $"Your confirmation code is: {confCode}.");
+                    _mailer.Send(message);
+                    _connection.Insert(ConfirmedUser);
                 }
 
                 _connection.Commit();

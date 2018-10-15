@@ -12,6 +12,8 @@ namespace Org.Igroknet.Auth.Domain
 
         void SetUserRole(Guid userId, Guid roleId);
 
+        void SendConfirmationCode(Guid userId);
+
         void ConfirmUser(Guid userId, int confirmationCode);
 
         void EnableDisableUser(Guid userId);

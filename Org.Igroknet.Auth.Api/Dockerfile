@@ -1,9 +1,9 @@
-FROM microsoft/dotnet:2.1-aspnetcore-runtime AS base
+FROM microsoft/dotnet:aspnetcore-runtime AS base
 WORKDIR /app
 EXPOSE 50350
 EXPOSE 44372
 
-FROM microsoft/dotnet:2.1-sdk AS build
+FROM microsoft/dotnet:sdk AS build
 WORKDIR /src
 COPY ["Org.Igroknet.Auth.Api/Org.Igroknet.Auth.Api.csproj", "Org.Igroknet.Auth.Api/"]
 RUN dotnet restore "Org.Igroknet.Auth.Api/Org.Igroknet.Auth.Api.csproj"
