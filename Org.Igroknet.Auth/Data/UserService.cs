@@ -1,10 +1,12 @@
 ﻿using org.igrok.validator;
 using Org.Igroknet.Auth.Domain;
 using Org.Igroknet.Auth.Exceptions;
+using Org.Igroknet.Auth.Models;
 using SQLite;
 using System;
 using System.Linq;
 using System.Net.Mail;
+using System.Text;
 
 namespace Org.Igroknet.Auth.Data
 {
@@ -12,14 +14,11 @@ namespace Org.Igroknet.Auth.Data
     {
         private SQLiteConnection _connection;
         private SmtpClient _mailer;
-        private string _from;
 
-        public UserService(SQLiteConnection connection, SmtpClient mailer, string from)
+        public UserService(SQLiteConnection connection, SmtpClient mailer)
         {
             _connection = connection;
             _mailer = mailer;
-            EmailValidator.ValidateEmail(from);
-            _from = from;
             InitTable();
         }
 
@@ -237,8 +236,9 @@ namespace Org.Igroknet.Auth.Data
             }
         }
 
-        public void SendConfirmationCode(Guid userId)
+        public void SendConfirmationCode(Guid userId, string from)
         {
+            EmailValidator.ValidateEmail(from);
             if(userId == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(userId));
@@ -258,12 +258,82 @@ namespace Org.Igroknet.Auth.Data
                     var random = new Random();
                     var confCode = random.Next();
                     var ConfirmedUser = new ConfirmedUser(userId, confCode);
-                    var message = new MailMessage(_from, user.Email, "Please confirm your account.", $"Your confirmation code is: {confCode}.");
+                    var message = new MailMessage(from, user.Email, "Please confirm your account.", $"Your confirmation code is: {confCode}.");
                     _mailer.Send(message);
                     _connection.Insert(ConfirmedUser);
                 }
 
                 _connection.Commit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                _connection.Rollback();
+                throw;
+            }
+        }
+
+        public void RemoveUser(Guid userId)
+        {
+            if (userId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+            try
+            {
+                _connection.BeginTransaction();
+
+                var user = _connection.Table<User>().SingleOrDefault(usr => usr.UserId == userId);
+
+                if (user == null)
+                {
+                    throw new DomainObjectMissingException(nameof(user));
+                }
+
+                _connection.Delete(user);
+
+                _connection.Commit();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                _connection.Rollback();
+                throw;
+            }
+        }
+
+        public UserModel LoginUser(string login, string password)
+        {
+            try
+            {
+                _connection.BeginTransaction();
+
+                var user = _connection.Table<User>().SingleOrDefault(usr => usr.Email == login && usr.Password == User.HashPassword(password));
+
+                if (user == null)
+                {
+                    throw new DomainObjectMissingException(nameof(user));
+                }
+
+                var role = _connection.Table<Role>().SingleOrDefault(rl => rl.RoleId == user.RoleId);
+
+                if(role == null)
+                {
+                    throw new DomainObjectMissingException(nameof(role));
+                }
+
+                var model = new UserModel
+                {
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    Email = user.Email,
+                    UserId = user.UserId,
+                    Claims = role.Claims,
+                    IsActive = user.IsActive
+                };
+
+                _connection.Commit();
+
+                return model;
             }
             catch (Exception e)
             {

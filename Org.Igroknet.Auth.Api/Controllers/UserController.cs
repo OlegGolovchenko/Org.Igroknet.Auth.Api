@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Org.Igroknet.Auth.Domain;
@@ -20,6 +21,7 @@ namespace Org.Igroknet.Auth.Api.Controllers
             _service = service;
         }
 
+        [AllowAnonymous]
         [HttpPost("adduser")]
         public IActionResult AddUser(AddUserViewModel userModel)
         {
@@ -34,6 +36,7 @@ namespace Org.Igroknet.Auth.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "User")]
         [HttpGet("confirm/{userId}")]
         public IActionResult ConfirmUser([FromRoute]Guid userId, [FromQuery] int? code)
         {
@@ -41,7 +44,7 @@ namespace Org.Igroknet.Auth.Api.Controllers
             {
                 if (!code.HasValue)
                 {
-                    _service.SendConfirmationCode(userId);
+                    _service.SendConfirmationCode(userId, Environment.GetEnvironmentVariable("SMTP_LOGIN"));
                 }
                 else
                 {
@@ -54,6 +57,8 @@ namespace Org.Igroknet.Auth.Api.Controllers
                 return BadRequest(e);
             }
         }
+
+
 
     }
 }
