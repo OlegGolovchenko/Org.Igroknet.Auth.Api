@@ -32,6 +32,30 @@ namespace Org.Igroknet.Auth.Data
 
                 _connection.CreateTable<Role>();
 
+                _connection.CreateTable<ConfirmedUser>();
+
+                var admin = new User("admin@local.site", "Admin");
+                admin.SetName("Main", "Administrator");
+                admin.ConfirmAccount();
+                var role = new Role("Admin");
+
+                var userRole = new Role("User");
+
+                admin.SetRole(role.RoleId);
+
+                var confirmedAdmin = new ConfirmedUser(admin.UserId, 123456);
+
+                if (_connection.Table<User>().Count() == 0)
+                {
+
+                    _connection.InsertOrReplace(admin);
+
+                    _connection.InsertOrReplace(role);
+
+                    _connection.InsertOrReplace(userRole);
+
+                    _connection.InsertOrReplace(confirmedAdmin);
+                }
                 _connection.Commit();
             }
             catch (Exception e)
@@ -61,7 +85,9 @@ namespace Org.Igroknet.Auth.Data
             {
                 _connection.BeginTransaction();
 
-                _connection.Insert(new User(login, password));
+                var user = new User(login, password);
+
+                _connection.Insert(user);
 
                 _connection.Commit();
             }
@@ -327,13 +353,35 @@ namespace Org.Igroknet.Auth.Data
                     FullName = $"{user.FirstName} {user.LastName}",
                     Email = user.Email,
                     UserId = user.UserId,
-                    Claims = role.Claims,
+                    Claim = role.Name,
                     IsActive = user.IsActive
                 };
 
                 _connection.Commit();
 
                 return model;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                _connection.Rollback();
+                throw;
+            }
+        }
+
+        public Guid AddRole(AddRoleViewModel model)
+        {
+            try
+            {
+                _connection.BeginTransaction();
+
+                var role = new Role(model.Name);
+
+                _connection.Insert(role);
+
+                _connection.Commit();
+
+                return role.RoleId;
             }
             catch (Exception e)
             {

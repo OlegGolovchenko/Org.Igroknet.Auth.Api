@@ -6,6 +6,5 @@ namespace Org.Igroknet.Auth.Models
     {
         public Guid RoleId { get; set; }
         public string Name { get; set; }
-        public string Claims { get; set; }
     }
 }

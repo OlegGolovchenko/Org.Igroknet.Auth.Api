@@ -2,11 +2,11 @@
 
 namespace Org.Igroknet.Auth.Domain
 {
-    public class ConfirmedUser
+    internal class ConfirmedUser
     {
-        public Guid ConfirmedUserId { get; private set; }
-        public Guid UserId { get; private set; }
-        public int ConfirmationCode { get; private set; }
+        public Guid ConfirmedUserId { get; set; }
+        public Guid UserId { get; set; }
+        public int ConfirmationCode { get; set; }
 
         public ConfirmedUser()
         {

@@ -17,4 +17,6 @@ RUN dotnet publish "Org.Igroknet.Auth.Api.csproj" -c Release -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
+RUN mkdir /usr/shared/igroknet
+VOLUME ["/usr/shared/igroknet"]
 ENTRYPOINT ["dotnet", "Org.Igroknet.Auth.Api.dll"]

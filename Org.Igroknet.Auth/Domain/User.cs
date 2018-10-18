@@ -6,16 +6,16 @@ using System.Text;
 
 namespace Org.Igroknet.Auth.Domain
 {
-    public class User
+    internal class User
     {
         [PrimaryKey]
-        public Guid UserId { get; private set; }
-        public string Email { get; private set; }
-        public string FirstName { get; private set; }
-        public string LastName { get; private set; }
-        public string Password { get; private set; }
-        public Guid RoleId { get; private set; }
-        public bool IsActive { get; private set; }
+        public Guid UserId { get; set; }
+        public string Email { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Password { get; set; }
+        public Guid RoleId { get; set; }
+        public bool IsActive { get; set; }
 
         public User()
         {
@@ -26,6 +26,7 @@ namespace Org.Igroknet.Auth.Domain
         {
             UserId = Guid.NewGuid();
             EmailValidator.ValidateEmail(email);
+            Email = email;
             Password = HashPassword(password);
             IsActive = false;
         }

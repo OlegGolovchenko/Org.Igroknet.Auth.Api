@@ -22,5 +22,7 @@ namespace Org.Igroknet.Auth.Domain
         void RemoveUser(Guid userId);
 
         UserModel LoginUser(string login, string password);
+
+        Guid AddRole(AddRoleViewModel model);
     }
 }

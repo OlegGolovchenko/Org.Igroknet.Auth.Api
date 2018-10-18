@@ -36,7 +36,14 @@ namespace Org.Igroknet.Auth.Api
 
             if (connectionString == null)
             {
-                connectionString = "/usr/share/igronket_auth.db3";
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    connectionString = "/usr/share/igroknet/igronket_auth.db3";
+                }
+                else if(Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    connectionString = "igroknet_auth.db3";
+                }
             }
 
             var sqliteConnection = new SQLiteConnection(connectionString);
@@ -56,6 +63,8 @@ namespace Org.Igroknet.Auth.Api
                 smtpClient.Credentials = new NetworkCredential(login, pwd);
             }
 
+            var userService = new UserService(sqliteConnection, smtpClient);
+
             container.Configure(config =>
             {
                 config.Scan(_ =>
@@ -65,10 +74,7 @@ namespace Org.Igroknet.Auth.Api
                     _.AssemblyContainingType<IUserService>();
                 });
 
-                config.For(typeof(IUserService)).Use(typeof(UserService));
-
-                config.For<SQLiteConnection>().Use(sqliteConnection);
-                config.For<SmtpClient>().Use(smtpClient);
+                config.For(typeof(IUserService)).Use(userService);
 
                 config.Populate(services);
             });
