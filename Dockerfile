@@ -18,6 +18,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
 RUN ls -la /usr/share
-RUN mkdir /usr/shared/igroknet
-VOLUME ["/usr/shared/igroknet"]
+RUN mkdir /usr/share/igroknet
+VOLUME ["/usr/share/igroknet"]
 ENTRYPOINT ["dotnet", "Org.Igroknet.Auth.Api.dll"]
