@@ -29,13 +29,23 @@ namespace TestApi
                 Password = "Admin"
             }), Encoding.UTF8, "application/json"));
 
+            var token = "";
+
             if (result.IsSuccessStatusCode)
             {
-                Console.WriteLine(await result.Content.ReadAsStringAsync());
+                token = await result.Content.ReadAsStringAsync();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", token);
+                Console.WriteLine(token);
             }
             else
             {
                 Console.WriteLine(result.StatusCode);
+            }
+
+            result = await client.GetAsync("user/test");
+            if (result.IsSuccessStatusCode)
+            {
+                Console.WriteLine(await result.Content.ReadAsStringAsync());
             }
         }
     }

@@ -7,7 +7,7 @@ namespace Org.Igroknet.Auth.Models
         public Guid UserId { get; set; }
         public string Email { get; set; }
         public string FullName { get; set; }
-        public string Claim { get; set; }
+        public string[] Claims { get; set; }
         public bool IsActive { get; set; }
     }
 }

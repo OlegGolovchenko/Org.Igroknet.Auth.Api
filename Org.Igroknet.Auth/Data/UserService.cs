@@ -353,9 +353,17 @@ namespace Org.Igroknet.Auth.Data
                     FullName = $"{user.FirstName} {user.LastName}",
                     Email = user.Email,
                     UserId = user.UserId,
-                    Claim = role.Name,
                     IsActive = user.IsActive
                 };
+
+                if(role.Name != "User")
+                {
+                    model.Claims = new string[] { role.Name, "User" };
+                }
+                else
+                {
+                    model.Claims = new string[] { role.Name };
+                }
 
                 _connection.Commit();
 

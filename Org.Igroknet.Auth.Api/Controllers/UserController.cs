@@ -81,13 +81,16 @@ namespace Org.Igroknet.Auth.Api.Controllers
 
                 var dateTimeNowEpoch = DateTimeOffset.UtcNow;
 
-                var claims = new[]
+                var claims = new List<Claim>
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, userModel.FullName),
                     new Claim(JwtRegisteredClaimNames.Jti,userModel.UserId.ToString()),
                     new Claim(JwtRegisteredClaimNames.Iat, dateTimeNowEpoch.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
-                    new Claim(ClaimTypes.Role,userModel.Claim)
                 };
+                foreach(var role in userModel.Claims)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
 
                 var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "http://localhost:5000";
                 var aud = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "http://localhost:5000";
@@ -107,6 +110,13 @@ namespace Org.Igroknet.Auth.Api.Controllers
             {
                 return BadRequest(e);
             }
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("test")]
+        public IActionResult test()
+        {
+            return Ok($"user {User.Identity.Name} is authenticated!!! welcome {User.Identity.Name}!!!");
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,16 @@ namespace Org.Igroknet.Auth.Api
         {
            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options=>
+                {
+                    options.Authority = "http://localhost:5000";
+                    options.Audience = "http://localhost:5000";
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = false;
+                });
+
             return ConfigureIoc(services);
         }
 
@@ -89,12 +100,8 @@ namespace Org.Igroknet.Auth.Api
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseHsts();
-            }
 
-            app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
